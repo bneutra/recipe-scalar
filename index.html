@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ingredient Scaler</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .scale-control {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .scale-control label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .scale-control input {
+            padding: 8px;
+            width: 100px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .scale-control button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ingredient Scaler</h1>
+    
+    <p>Paste your ingredients below (one per line: quantity unit ingredient)</p>
+    <textarea id="ingredientInput" placeholder="Example:
+2 cups flour
+1.5 tsp salt
+250 g butter
+3 eggs"></textarea>
+    
+    <button onclick="parseIngredients()">Parse Ingredients</button>
+    
+    <div id="scaleControl" class="scale-control" style="display: none;">
+        <label for="percentage">Scale to percentage:</label>
+        <input type="number" id="percentage" value="100" min="1">
+        <span>%</span>
+        <button onclick="scaleIngredients()">Apply</button>
+    </div>
+    
+    <div id="tableContainer"></div>
+
+    <script>
+        let ingredients = [];
+        
+        function parseIngredients() {
+            const input = document.getElementById('ingredientInput').value;
+            const lines = input.split('\n').filter(line => line.trim());
+            
+            ingredients = [];
+            
+            lines.forEach(line => {
+                // Match: optional spaces, number (int or float), spaces, letters (unit), spaces, rest (ingredient)
+                const match = line.trim().match(/^\s*([\d.]+)\s*([a-zA-Z]+)\s+(.+)$/);
+                
+                if (match) {
+                    ingredients.push({
+                        originalQuantity: parseFloat(match[1]),
+                        quantity: parseFloat(match[1]),
+                        unit: match[2],
+                        ingredient: match[3]
+                    });
+                }
+            });
+            
+            displayTable();
+            
+            if (ingredients.length > 0) {
+                document.getElementById('scaleControl').style.display = 'block';
+            }
+        }
+        
+        function displayTable() {
+            if (ingredients.length === 0) {
+                document.getElementById('tableContainer').innerHTML = '<p>No valid ingredients parsed.</p>';
+                return;
+            }
+            
+            let html = '<table><thead><tr><th>Quantity</th><th>Unit</th><th>Ingredient</th></tr></thead><tbody>';
+            
+            ingredients.forEach(item => {
+                html += `<tr>
+                    <td>${item.quantity}</td>
+                    <td>${item.unit}</td>
+                    <td>${item.ingredient}</td>
+                </tr>`;
+            });
+            
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+        
+        function scaleIngredients() {
+            const percentage = parseInt(document.getElementById('percentage').value);
+            
+            if (isNaN(percentage) || percentage <= 0) {
+                alert('Please enter a valid percentage');
+                return;
+            }
+            
+            const multiplier = percentage / 100;
+            
+            ingredients.forEach(item => {
+                item.quantity = item.originalQuantity * multiplier;
+            });
+            
+            displayTable();
+        }
+    </script>
+</body>
+</html>
