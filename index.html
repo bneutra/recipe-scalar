@@ -78,6 +78,7 @@
 3 eggs"></textarea>
     
     <button onclick="parseIngredients()">Parse Ingredients</button>
+    <button onclick="generateShareLink()" style="margin-left: 10px; background-color: #28a745;">Share Link</button>
     
     <div id="scaleControl" class="scale-control" style="display: none;">
         <label for="percentage">Scale to percentage:</label>
@@ -90,6 +91,22 @@
 
     <script>
         let ingredients = [];
+        
+        // Load from URL parameter on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ingredientsParam = urlParams.get('ingredients');
+            
+            if (ingredientsParam) {
+                try {
+                    const decoded = decodeURIComponent(ingredientsParam);
+                    document.getElementById('ingredientInput').value = decoded;
+                    parseIngredients();
+                } catch (e) {
+                    console.error('Error loading ingredients from URL:', e);
+                }
+            }
+        });
         
         function parseIngredients() {
             const input = document.getElementById('ingredientInput').value;
@@ -116,6 +133,27 @@
             if (ingredients.length > 0) {
                 document.getElementById('scaleControl').style.display = 'block';
             }
+        }
+        
+        function generateShareLink() {
+            const input = document.getElementById('ingredientInput').value.trim();
+            
+            if (!input) {
+                alert('Please enter some ingredients first!');
+                return;
+            }
+            
+            const encoded = encodeURIComponent(input);
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = baseUrl + '?ingredients=' + encoded;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Share link copied to clipboard!\n\n' + shareUrl);
+            }).catch(() => {
+                // Fallback if clipboard API fails
+                prompt('Copy this link:', shareUrl);
+            });
         }
         
         function displayTable() {
