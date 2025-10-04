@@ -73,9 +73,10 @@
     <p>Paste your ingredients below (one per line: quantity unit ingredient)</p>
     <textarea id="ingredientInput" placeholder="Example:
 2 cups flour
-1.5 tsp salt
+1/2 tsp salt
+1.5 cups sugar
 250 g butter
-3 eggs"></textarea>
+3/4 cup milk"></textarea>
     
     <button onclick="parseIngredients()">Parse Ingredients</button>
     <button onclick="generateShareLink()" style="margin-left: 10px; background-color: #28a745;">Share Link</button>
@@ -115,13 +116,25 @@
             ingredients = [];
             
             lines.forEach(line => {
-                // Match: optional spaces, number (int or float), spaces, letters (unit), spaces, rest (ingredient)
-                const match = line.trim().match(/^\s*([\d.]+)\s*([a-zA-Z]+)\s+(.+)$/);
+                // Match: optional spaces, number (int/float/fraction), spaces, letters (unit), spaces, rest (ingredient)
+                const match = line.trim().match(/^\s*([\d.\/]+)\s*([a-zA-Z]+)\s+(.+)$/);
                 
                 if (match) {
+                    const quantityStr = match[1];
+                    let quantity;
+                    
+                    // Check if it's a fraction
+                    if (quantityStr.includes('/')) {
+                        const parts = quantityStr.split('/');
+                        quantity = parseFloat(parts[0]) / parseFloat(parts[1]);
+                    } else {
+                        quantity = parseFloat(quantityStr);
+                    }
+                    
                     ingredients.push({
-                        originalQuantity: parseFloat(match[1]),
-                        quantity: parseFloat(match[1]),
+                        originalQuantity: quantity,
+                        originalDisplay: quantityStr,
+                        quantity: quantity,
                         unit: match[2],
                         ingredient: match[3]
                     });
@@ -165,8 +178,14 @@
             let html = '<table><thead><tr><th>Quantity</th><th>Unit</th><th>Ingredient</th></tr></thead><tbody>';
             
             ingredients.forEach(item => {
+                // Display as fraction if it was originally a fraction, otherwise show decimal
+                let displayQty = item.quantity;
+                
+                // Round to reasonable precision
+                displayQty = Math.round(displayQty * 1000) / 1000;
+                
                 html += `<tr>
-                    <td>${item.quantity}</td>
+                    <td>${displayQty}</td>
                     <td>${item.unit}</td>
                     <td>${item.ingredient}</td>
                 </tr>`;
